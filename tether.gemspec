@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'tether'
-  s.version     = '0.1.2'
-  s.date        = '2015-02-21'
+  s.version     = '0.1.3'
+  s.date        = '2015-03-07'
   s.summary     = 'Tether API client library'
   s.description = s.summary
   s.authors     = ['Oleh Vasylenko']

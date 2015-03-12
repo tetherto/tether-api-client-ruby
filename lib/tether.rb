@@ -30,6 +30,18 @@ module Tether
       get '/exchange_rates'
     end
 
+    def transactions
+      get '/transactions'
+    end
+
+    def get_transaction(id)
+      get "/transactions/#{id}"
+    end
+
+    def new_transaction(params)
+      post '/transactions', params
+    end
+
     # Wrappers for the main HTTP verbs
 
     def get(path, options={})
