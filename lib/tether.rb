@@ -30,6 +30,7 @@ module Tether
       get '/exchange_rates'
     end
 
+    # transactions
     def transactions
       get '/transactions'
     end
@@ -40,6 +41,19 @@ module Tether
 
     def new_transaction(params)
       post '/transactions', params
+    end
+
+    # exchange orders
+    def exchange_orders
+      get '/exchange_orders'
+    end
+
+    def get_exchange_order(id)
+      get "/exchange_orders/#{id}"
+    end
+
+    def new_exchange_order(params)
+      post '/exchange_orders', params
     end
 
     # Wrappers for the main HTTP verbs
