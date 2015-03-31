@@ -5,7 +5,7 @@ module Tether
   class Client
     include HTTParty
 
-    BASE_URI = 'https://tether.to/api/v1'
+    BASE_URI = 'https://wallet.tether.to/api/v1'
 
     def initialize(api_key='', api_secret='', options={})
       @api_key = api_key
