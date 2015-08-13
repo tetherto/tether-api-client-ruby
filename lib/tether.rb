@@ -56,6 +56,11 @@ module Tether
       post '/exchange_orders', params
     end
 
+    # invoices
+    def new_invoice(params)
+      post '/invoices', params
+    end
+
     # Wrappers for the main HTTP verbs
 
     def get(path, options={})
