@@ -11,7 +11,7 @@ describe Tether::Client do
 
   it 'should handle errors' do
     hoax :get, '/balances', { error: 'Fake error' }
-    expect { @client.balance }.to raise_error(Tether::Client::ApiError, 'Fake error')
+    expect { @client.balances }.to raise_error(Tether::Client::ApiError, 'Fake error')
   end
 
   it 'should get balance' do
