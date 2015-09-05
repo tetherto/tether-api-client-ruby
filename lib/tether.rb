@@ -61,6 +61,24 @@ module Tether
       post '/invoices', params
     end
 
+    def check_signature(type, params)
+      raise ApiError, 'Request is unsigned!' unless params.has_key? 'signature'
+      string_to_sign = ''
+
+      case type
+        when :invoice_callback
+          %w(id deposit_address invoiced_amount received_amount currency status).each { |field|
+            raise ApiError, "Missing field: #{field}" unless params.has_key? field
+            string_to_sign += params[field].to_s
+          }
+          string_to_sign += @api_secret
+        else
+          raise ApiError, "Cannot check signature of type #{type}"
+      end
+
+      raise ApiError, 'Signature is corrupted/fake!' unless params['signature'] == Digest::MD5.hexdigest(string_to_sign)
+    end
+
     # Wrappers for the main HTTP verbs
 
     def get(path, options={})
