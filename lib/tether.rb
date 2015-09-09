@@ -10,13 +10,10 @@ module Tether
     def initialize(api_key='', api_secret='', options={})
       @api_key = api_key
       @api_secret = api_secret
-
-      # defaults
-      options[:base_uri] ||= BASE_URI
-      @base_uri = options[:base_uri]
-      options[:format] ||= :json
+      @base_uri = options.has_key?(:base_uri) ? options[:base_uri] : BASE_URI
 
       # forward to HTTParty
+      options[:format] ||= :json
       options.each do |k,v|
         self.class.send k, v
       end
@@ -98,11 +95,11 @@ module Tether
     end
 
     def do_request(verb, uri, options={})
-      path = uri
+      path = @base_uri + uri
 
       if [:get, :delete].include? verb
         request_options = {}
-        path = "#{uri}?#{URI.encode_www_form(options)}" unless options.empty?
+        path = "#{@base_uri}#{uri}?#{URI.encode_www_form(options)}" unless options.empty?
         content_md5 = md5_base64digest('')
       else
         body = options.to_json
