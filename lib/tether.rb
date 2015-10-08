@@ -1,5 +1,6 @@
 require 'httparty'
 require 'hashie'
+require 'ambisafe'
 
 module Tether
   class Client
@@ -7,9 +8,11 @@ module Tether
 
     BASE_URI = 'https://wallet.tether.to/api/v1'
 
-    def initialize(api_key='', api_secret='', options={})
+    def initialize(api_key='', api_secret='', password='', options={})
       @api_key = api_key
       @api_secret = api_secret
+      @account_password = password
+
       @base_uri = options.has_key?(:base_uri) ? options[:base_uri] : BASE_URI
 
       # forward to HTTParty
@@ -17,6 +20,10 @@ module Tether
       options.each do |k,v|
         self.class.send k, v
       end
+    end
+
+    def get_account
+      get '/account'
     end
 
     def balances
@@ -37,7 +44,14 @@ module Tether
     end
 
     def new_transaction(params)
-      post '/transactions', params
+      result = post '/transactions/prepare', params
+
+      signed_transaction = sign_transaction(result.transaction)
+
+      post '/transactions', {
+          :transaction => signed_transaction,
+          :signed_tx_info => result.signed_tx_info
+      }
     end
 
     # exchange orders
@@ -156,6 +170,17 @@ module Tether
       else
         b64_encode(Digest::MD5.digest(string))
       end
+    end
+
+    def sign_transaction(transaction)
+      account = get_account
+      private_key = Ambisafe.decrypt_priv_key_from_container(account.data, get_account_password)
+      transaction["user_signatures"] = Ambisafe.sign(transaction["sighashes"], private_key)
+      transaction
+    end
+
+    def get_account_password
+      @account_password
     end
 
   end
