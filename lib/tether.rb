@@ -64,7 +64,14 @@ module Tether
     end
 
     def new_exchange_order(params)
-      post '/exchange_orders', params
+      result = post '/exchange_orders/prepare', params
+
+      signed_transaction = sign_transaction(result.transaction)
+
+      post '/exchange_orders', {
+          :transaction => signed_transaction,
+          :signed_tx_info => result.signed_tx_info
+      }
     end
 
     # invoices
