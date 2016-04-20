@@ -9,5 +9,4 @@ group :test do
   gem 'fakeweb'
 end
 
-gem 'ambisafe', :git => 'https://bitbucket.org/ambisafe/client-ruby.git'
 gem 'ffi' # required when doing Bitcoin.open_key in Ambisafe client

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'tether'
-  s.version     = '0.2'
+  s.version     = '0.3'
   s.date        = '2015-10-08'
   s.summary     = 'Tether API client library'
   s.description = s.summary
@@ -11,4 +11,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'httparty', '>=0.13.0'
   s.add_dependency 'hashie',  '~> 3.0'
+  s.add_dependency "bitcoin"
+
 end
