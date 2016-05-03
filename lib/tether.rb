@@ -187,7 +187,7 @@ module Tether
       transaction
     end
 
-		def sign(sighashes, priv_key)
+    def sign(sighashes, priv_key)
       sighashes.map { |sighash| sign_hash(sighash, priv_key) }
     end
 
