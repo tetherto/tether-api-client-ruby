@@ -1,6 +1,6 @@
 require 'httparty'
 require 'hashie'
-require 'ambisafe'
+require 'bitcoin'
 
 module Tether
   class Client
@@ -13,6 +13,7 @@ module Tether
       @api_secret = api_secret
       @account_password = password
 
+
       @base_uri = options.has_key?(:base_uri) ? options[:base_uri] : BASE_URI
 
       # forward to HTTParty
@@ -23,32 +24,32 @@ module Tether
     end
 
     def get_account
-      get '/account'
+      get '/account.json'
     end
 
     def balances
-      get '/balances'
+      get '/balances.json'
     end
 
     def exchange_rates
-      get '/exchange_rates'
+      get '/exchange_rates.json'
     end
 
     # transactions
     def transactions
-      get '/transactions'
+      get '/transactions.json'
     end
 
     def get_transaction(id)
-      get "/transactions/#{id}"
+      get "/transactions/#{id}.json"
     end
 
     def new_transaction(params)
-      result = post '/transactions/prepare', params
+      result = post '/transactions/prepare.json', params
 
       signed_transaction = sign_transaction(result.transaction)
 
-      post '/transactions', {
+      post '/transactions.json', {
           :transaction => signed_transaction,
           :signed_tx_info => result.signed_tx_info
       }
@@ -56,19 +57,19 @@ module Tether
 
     # exchange orders
     def exchange_orders
-      get '/exchange_orders'
+      get '/exchange_orders.json'
     end
 
     def get_exchange_order(id)
-      get "/exchange_orders/#{id}"
+      get "/exchange_orders/#{id}.json"
     end
 
     def new_exchange_order(params)
-      result = post '/exchange_orders/prepare', params
+      result = post '/exchange_orders/prepare.json', params
 
       signed_transaction = sign_transaction(result.transaction)
 
-      post '/exchange_orders', {
+      post '/exchange_orders.json', {
           :transaction => signed_transaction,
           :signed_tx_info => result.signed_tx_info
       }
@@ -76,7 +77,7 @@ module Tether
 
     # invoices
     def new_invoice(params)
-      post '/invoices', params
+      post '/invoices.json', params
     end
 
     def check_signature(type, params)
@@ -181,12 +182,46 @@ module Tether
 
     def sign_transaction(transaction)
       account = get_account
-      private_key = Ambisafe.decrypt_priv_key_from_container(account.data, get_account_password)
-      transaction["user_signatures"] = Ambisafe.sign(transaction["sighashes"], private_key)
+      private_key = decrypt_priv_key_from_container(account.data, account_password)
+      transaction["user_signatures"] = sign(transaction["sighashes"], private_key)
       transaction
     end
 
-    def get_account_password
+    def sign(sighashes, priv_key)
+      sighashes.map { |sighash| sign_hash(sighash, priv_key) }
+    end
+
+    def sign_hash(sighash, priv_key)
+      keypair = Bitcoin.open_key priv_key
+      sig = Bitcoin.sign_data(keypair, [sighash].pack("H*"))
+      sig.unpack("H*").first
+    end
+
+    def decrypt_priv_key_from_container(container, password)
+      data = container["data"].scan(/../).map(&:hex).pack('c*')
+      iv = container["iv"].scan(/../).map(&:hex).pack('c*')
+      priv_key = decrypt(data, container["salt"], iv, password)
+      priv_key.unpack('H*')[0]
+    end
+
+    def decrypt(encrypted, salt, iv, password)
+      begin
+        decipher = OpenSSL::Cipher::AES.new(256, :CBC)
+        decipher.decrypt
+        decipher.key = derive_key(salt, password)
+        decipher.iv = iv
+        decrypted = decipher.update(encrypted) + decipher.final
+        decrypted
+      rescue OpenSSL::Cipher::CipherError => e
+        e.message
+      end
+    end
+
+    def derive_key(salt, password)
+      OpenSSL::PKCS5.pbkdf2_hmac(password, salt, 1000, 32, OpenSSL::Digest::SHA512.new)
+    end
+
+    def account_password
       @account_password
     end
 
